@@ -180,7 +180,7 @@ class TTS:
             pred_aln_trg = torch.zeros(input_lengths, int(pred_dur.sum().data))
             c_frame = 0
             for i in range(pred_aln_trg.size(0)):
-                pred_aln_trg[i, c_frame:c_frame + int(pred_dur[i].data)] = 1
+                pred_aln_trg[i, c_frame:c_frame + int(pred_dur[i].data.item())] = 1
                 c_frame += int(pred_dur[i].data)
 
             # Encode prosody
