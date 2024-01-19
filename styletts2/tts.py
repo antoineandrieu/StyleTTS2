@@ -127,20 +127,26 @@ class TTS:
         if phonemizer is None:
             raise ValueError("Phonemizer is required for inference")
 
+        print(self.device)
+
         # Preprocess text
         text = text.strip()
         ps = phonemizer.phonemize([text])
         ps = ' '.join(word_tokenize(ps[0]))
 
+        print(f"Text: {text}")
+        print(f"Phonemes: {ps}")
+        
         # Prepare tokens
         tokens = torch.LongTensor(
             [0] + self.text_cleaner(ps)).to(self.device).unsqueeze(0)
+        
+        print(f"Tokens: {tokens}")
 
         with torch.no_grad():
-            print(self.device)
             input_lengths = torch.LongTensor(
                 [tokens.shape[-1]]).to(self.device)
-            print(input_lengths)
+            print(f"Input lenghts: ", input_lengths)
             text_mask = self.length_to_mask(input_lengths).to(self.device)
 
             # Encode text
