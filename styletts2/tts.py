@@ -137,8 +137,10 @@ class TTS:
             [0] + self.text_cleaner(ps)).to(self.device).unsqueeze(0)
 
         with torch.no_grad():
+            print(self.device)
             input_lengths = torch.LongTensor(
                 [tokens.shape[-1]]).to(self.device)
+            print(input_lengths)
             text_mask = self.length_to_mask(input_lengths).to(self.device)
 
             # Encode text
@@ -169,21 +171,12 @@ class TTS:
             s_pred = torch.cat([ref, s], dim=-1)
 
             # Predict duration
-            print(f"d_en: {d_en}")
-            print(f"s: {s}")
-            print(f"input_lengths: {input_lengths}")
-            print(f"text_mask: {text_mask}")
             d = self.model.predictor.text_encoder(
                 d_en, s, input_lengths, text_mask)
-            print(f"d: {d}")
             x, _ = self.model.predictor.lstm(d)
-            print(f"x: {x}")
             duration = self.model.predictor.duration_proj(x)
-            print(f"duration: {duration}")
             duration = torch.sigmoid(duration).sum(axis=-1)
-            print(f"duration: {duration}")
             pred_dur = torch.round(duration.squeeze()).clamp(min=1)
-            print(f"pred_dur: {pred_dur}")
 
             # Create alignment target
             pred_aln_trg = torch.zeros(input_lengths, int(pred_dur.sum().data))
