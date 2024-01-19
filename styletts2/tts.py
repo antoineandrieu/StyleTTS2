@@ -135,12 +135,10 @@ class TTS:
         # Prepare tokens
         tokens = torch.LongTensor(
             [0] + self.text_cleaner(ps)).to(self.device).unsqueeze(0)
-        print(f"tokens: {tokens}")
 
         with torch.no_grad():
             input_lengths = torch.LongTensor(
                 [tokens.shape[-1]]).to(self.device)
-            print(f"input_lengths: {input_lengths}")
             text_mask = self.length_to_mask(input_lengths).to(self.device)
 
             # Encode text
@@ -175,7 +173,9 @@ class TTS:
                 d_en, s, input_lengths, text_mask)
             x, _ = self.model.predictor.lstm(d)
             duration = self.model.predictor.duration_proj(x)
+            print(f"duration: {duration}")
             duration = torch.sigmoid(duration).sum(axis=-1)
+            print(f"duration: {duration}")
             pred_dur = torch.round(duration.squeeze()).clamp(min=1)
             print(f"pred_dur: {pred_dur}")
 
@@ -183,9 +183,6 @@ class TTS:
             pred_aln_trg = torch.zeros(input_lengths, int(pred_dur.sum().data))
             c_frame = 0
             for i in range(pred_aln_trg.size(0)):
-                print(f"i: {i}")
-                print(f"pred_dur[i]: {pred_dur[i]}")
-                print(f"pred_dur[i].data: {pred_dur[i].data}")
                 pred_aln_trg[i, c_frame:c_frame + int(pred_dur[i].data)] = 1
                 c_frame += int(pred_dur[i].data)
 
