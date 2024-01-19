@@ -169,9 +169,15 @@ class TTS:
             s_pred = torch.cat([ref, s], dim=-1)
 
             # Predict duration
+            print(f"d_en: {d_en}")
+            print(f"s: {s}")
+            print(f"input_lengths: {input_lengths}")
+            print(f"text_mask: {text_mask}")
             d = self.model.predictor.text_encoder(
                 d_en, s, input_lengths, text_mask)
+            print(f"d: {d}")
             x, _ = self.model.predictor.lstm(d)
+            print(f"x: {x}")
             duration = self.model.predictor.duration_proj(x)
             print(f"duration: {duration}")
             duration = torch.sigmoid(duration).sum(axis=-1)
