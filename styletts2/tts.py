@@ -135,17 +135,23 @@ class TTS:
         # Prepare tokens
         tokens = torch.LongTensor(
             [0] + self.text_cleaner(ps)).to(self.device).unsqueeze(0)
+        print(f"tokens: {tokens}")
 
         with torch.no_grad():
             input_lengths = torch.LongTensor(
                 [tokens.shape[-1]]).to(self.device)
+            print(f"input_lengths: {input_lengths}")
             text_mask = self.length_to_mask(input_lengths).to(self.device)
+            print(f"text_mask: {text_mask}")
 
             # Encode text
             t_en = self.model.text_encoder(tokens, input_lengths, text_mask)
+            print(f"t_en: {t_en}")
             bert_dur = self.model.bert(
                 tokens, attention_mask=(~text_mask).int())
+            print(f"bert_dur: {bert_dur}")
             d_en = self.model.bert_encoder(bert_dur).transpose(-1, -2)
+            print(f"d_en: {d_en}")
 
             # Predict style
             s_pred = self.sampler(
@@ -167,20 +173,26 @@ class TTS:
             s = beta * s + (1 - beta) * ref_s[:, 128:]
 
             s_pred = torch.cat([ref, s], dim=-1)
+            print(f"s_pred: {s_pred}")
 
             # Predict duration
             d = self.model.predictor.text_encoder(
                 d_en, s, input_lengths, text_mask)
+            print(f"d: {d}")
             x, _ = self.model.predictor.lstm(d)
             duration = self.model.predictor.duration_proj(x)
             duration = torch.sigmoid(duration).sum(axis=-1)
+            print(f"duration: {duration}")
             pred_dur = torch.round(duration.squeeze()).clamp(min=1)
+            print(f"pred_dur: {pred_dur}")
 
             # Create alignment target
             pred_aln_trg = torch.zeros(input_lengths, int(pred_dur.sum().data))
+            print(f"pred_aln_trg: {pred_aln_trg}")
             c_frame = 0
             for i in range(pred_aln_trg.size(0)):
-                pred_aln_trg[i, c_frame:c_frame + int(pred_dur[i].data.item())] = 1
+                print(f"pred_dur[i].data: {pred_dur[i].data}")
+                pred_aln_trg[i, c_frame:c_frame + int(pred_dur[i].data)] = 1
                 c_frame += int(pred_dur[i].data)
 
             # Encode prosody
